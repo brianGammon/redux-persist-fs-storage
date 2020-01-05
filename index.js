@@ -1,5 +1,6 @@
 /* @flow */
 import fs from 'react-native-fs';
+import { Platform } from 'react-native';
 
 export const DocumentDir = fs.DocumentDirectoryPath;
 export const CacheDir = fs.CachesDirectoryPath;
@@ -48,6 +49,11 @@ const FSStorage = (
   ): Promise<void> =>
     withCallback(callback, async () => {
       await fs.mkdir(baseFolder);
+      // We must remove the file in first before writing it on Android 10.
+      // https://github.com/itinance/react-native-fs/issues/700
+      if (Platform.OS === 'android' && Platform.Version >= 29) {
+        await removeItem(key);
+      }
       await fs.writeFile(pathForKey(key), value, 'utf8');
     });
 
